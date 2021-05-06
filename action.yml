@@ -1,5 +1,9 @@
 name: "Re-run open PRs when base changes"
 description: "Re-triggers Workflows on open Pull Requests by pushing an empty commit to the PR branch."
+branding:
+  icon: 'activity'  
+  color: 'orange'
+author: Justin Vanderhooft
 inputs:
   github_token:
     description: "The token to authenticate Octokit. This token will also be used to dispatch worfklow events."
