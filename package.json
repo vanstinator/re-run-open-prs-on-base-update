@@ -1,6 +1,6 @@
 {
   "name": "retrigger-workflows-on-open-prs",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tiagobento/retrigger-workflows-on-open-prs.git"
+    "url": "git+https://github.com/vanstinator/retrigger-workflows-on-open-prs.git"
   },
   "author": "",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/tiagobento/retrigger-workflows-on-open-prs/issues"
+    "url": "https://github.com/vanstinator/retrigger-workflows-on-open-prs/issues"
   },
-  "homepage": "https://github.com/tiagobento/retrigger-workflows-on-open-prs#readme",
+  "homepage": "https://github.com/vanstinator/retrigger-workflows-on-open-prs#readme",
   "dependencies": {
     "@actions/core": "^1.2.6",
     "@actions/github": "^4.0.0",
