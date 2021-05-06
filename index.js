@@ -48,9 +48,6 @@ async function dispatchWorkflowEvent(octokit, data) {
         await waitForCanceledRun(octokit, data);
     }
 
-    workflowRun = await getWorkflowRunForBranch(octokit, data);
-    console.error(workflowRun);
-
     return octokit.actions.reRunWorkflow({
         owner: data.owner,
         repo: data.repo,
@@ -113,17 +110,18 @@ async function run() {
 
     console.log(`Found ${openPrs.length} open PR(s) targeting '${branch}'`);
 
-    const dispatches = openPrs.map(pr => {
+    const dispatches = openPrs.map(async pr => {
         console.log(`Re-triggering workflows on #${pr.number}: ${pr.title}`);
-        return dispatchWorkflowEventToGithub({
+
+        await dispatchWorkflowEventToGithub({
             owner: pr.head.user.login,
             repo: repo,
             ref: pr.head.ref,
             token: githubToken
-        }).then(res => {
-            console.log(`Dispatched workflowId on #${pr.number}: ${pr.title}`)
-        });
-    })
+        })
+
+        console.log(`Dispatched workflow on #${pr.number}: ${pr.title}`)
+    });
 
     return Promise.all(dispatches);
 }
