@@ -22,15 +22,21 @@ const fetch = require("node-fetch");
 
 async function waitForCanceledRun(octokit, data) {
 
-    console.info(`Waiting for workflow to cancel... ${data.owner}/${data.repo}/${data.ref}`);
-    await new Promise(resolve => setTimeout(resolve, 4000));
+    // If we somehow get into a state where the status never updates we should bail eventually
+    let count = 0;
+    while (count < 20) {
 
-    let workflowRun = await getWorkflowRunForBranch(octokit, data);
+        count++;
 
-    if (workflowRun.status !== 'completed') {
-        await waitForCanceledRun(octokit, data);
+        console.info(`Waiting for workflow to cancel (attempt #${count})... ${data.owner}/${data.repo}/${data.ref}`);
+
+        await new Promise(resolve => setTimeout(resolve, 4000));
+        let workflowRun = await getWorkflowRunForBranch(octokit, data);
+    
+        if (workflowRun.status === 'completed') {
+            break;
+        }
     }
-
 }
 
 async function dispatchWorkflowEvent(octokit, data) {
