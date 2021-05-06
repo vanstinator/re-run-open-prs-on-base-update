@@ -19,10 +19,37 @@ const github = require("@actions/github");
 const { Octokit } = require("@octokit/rest")
 const fetch = require("node-fetch");
 
+
+async function waitForCanceledRun(octokit, data) {
+
+    console.info(`Waiting for workflow to cancel... ${data.owner}/${data.repo}/${data.ref}`);
+    await new Promise(resolve => setTimeout(resolve, 4000));
+
+    let workflowRun = await getWorkflowRunForBranch(octokit, data);
+
+    if (workflowRun.status !== 'completed') {
+        await waitForCanceledRun(octokit, data);
+    }
+
+}
+
 async function dispatchWorkflowEvent(octokit, data) {
     console.info(`Dispatching "workflow_dispatch"... ${data.owner}/${data.repo}/${data.ref}`);
 
-    const workflowRun = await getWorkflowRunForBranch(octokit, data);
+    let workflowRun = await getWorkflowRunForBranch(octokit, data);
+
+    if (workflowRun.status !== 'completed') {
+        await octokit.actions.cancelWorkflowRun({
+            owner: data.owner,
+            repo: data.repo,
+            run_id: workflowRun.id
+        });
+
+        await waitForCanceledRun(octokit, data);
+    }
+
+    workflowRun = await getWorkflowRunForBranch(octokit, data);
+    console.error(workflowRun);
 
     return octokit.actions.reRunWorkflow({
         owner: data.owner,
