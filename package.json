@@ -1,5 +1,5 @@
 {
-  "name": "retrigger-workflows-on-open-prs",
+  "name": "re-run-open-prs-on-base-update",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",

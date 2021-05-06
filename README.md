@@ -15,7 +15,7 @@ This GitHub Action simply identifies the open PRs targeting the branch where the
 ### Usage
 
 ```yaml
-name: "Re-trigger Workflows on open PRs"
+name: "Re-run open PRs when base changes"
 
 on:
   push:
@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: vanstinator/retrigger-workflows-on-open-prs@v1
+      - uses: vanstinator/re-run-open-prs-on-base-update@v1
         with:
           github_token: ${{ secrets.MY_TOKEN_WITH_MAINTAINER_PERMISSIONS }}
 ```
