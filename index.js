@@ -33,7 +33,7 @@ async function waitForCanceledRun(octokit, data) {
         await new Promise(resolve => setTimeout(resolve, 4000));
         let workflowRun = await getWorkflowRunForBranch(octokit, data);
     
-        if (workflowRun.status === 'completed') {
+        if (workflowRun && workflowRun.status === 'completed') {
             break;
         }
     }
@@ -44,21 +44,23 @@ async function dispatchWorkflowEvent(octokit, data) {
 
     let workflowRun = await getWorkflowRunForBranch(octokit, data);
 
-    if (workflowRun.status !== 'completed') {
-        await octokit.actions.cancelWorkflowRun({
+    if (workflowRun) {
+        if (workflowRun.status !== 'completed') {
+            await octokit.actions.cancelWorkflowRun({
+                owner: data.owner,
+                repo: data.repo,
+                run_id: workflowRun.id
+            });
+
+            await waitForCanceledRun(octokit, data);
+        }
+
+        return octokit.actions.reRunWorkflow({
             owner: data.owner,
             repo: data.repo,
             run_id: workflowRun.id
         });
-
-        await waitForCanceledRun(octokit, data);
     }
-
-    return octokit.actions.reRunWorkflow({
-        owner: data.owner,
-        repo: data.repo,
-        run_id: workflowRun.id
-    });
 }
 
 async function getWorkflowRunForBranch(octokit, data) {
