@@ -121,14 +121,20 @@ async function run() {
     const dispatches = openPrs.map(async pr => {
         console.log(`Re-triggering workflows on #${pr.number}: ${pr.title}`);
 
-        await dispatchWorkflowEventToGithub({
-            owner: pr.head.user.login,
-            repo: repo,
-            ref: pr.head.ref,
-            token: githubToken
-        })
+        try {
+            await dispatchWorkflowEventToGithub({
+                owner: pr.head.user.login,
+                repo: repo,
+                ref: pr.head.ref,
+                token: githubToken
+            })
+        } catch (e) {
+            console.warn(`Failed to trigger workflow on #${pr.number}: ${pr.title}`);
+            console.warn(e);
+        }
 
-        console.log(`Dispatched workflow on #${pr.number}: ${pr.title}`)
+
+        console.log(`Dispatched workflow on #${pr.number}: ${pr.title}`);
     });
 
     return Promise.all(dispatches);
