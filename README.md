@@ -26,4 +26,5 @@ jobs:
       - uses: vanstinator/re-run-open-prs-on-base-update@v1
         with:
           github_token: ${{ secrets.GH_TOKEN }}
+          skip_failed_runs: false
 ```
