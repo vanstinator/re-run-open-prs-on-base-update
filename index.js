@@ -33,6 +33,8 @@ async function waitForCanceledRun(octokit, data) {
         await new Promise(resolve => setTimeout(resolve, 4000));
         let workflowRun = await getWorkflowRunForBranch(octokit, data);
     
+        console.log(JSON.stringify(workflowRun, null, 2));
+
         if (workflowRun && workflowRun.status === 'completed') {
             break;
         }
