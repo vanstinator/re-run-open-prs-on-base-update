@@ -114,7 +114,7 @@ async function run() {
 
     const openPrs = await fetch(`${githubApiDomain}/repos/${owner}/${repo}/pulls?state=open&base=${branch}`, authHeaders)
         .then(c => c.json())
-        .then(prs => prs.filter(pr => !pr.user.login.includes("dependabot")));
+        .then(prs => prs.filter(pr => !pr.user.login.includes("dependabot")).filter(pr => !pr.draft));
 
     console.log(`Found ${openPrs.length} open PR(s) targeting '${branch}'`);
 
