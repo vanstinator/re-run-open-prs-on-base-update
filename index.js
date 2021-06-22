@@ -46,14 +46,12 @@ async function dispatchWorkflowEvent(octokit, data) {
 
     if (workflowRun) {
 
-        const skipFailure = core.getInput("skip_failed_runs");
+        const skipFailedRuns = core.getInput("skip_failed_runs");
 
-        if (workflowRun.conclusion === 'failure' && !skipFailure) {
+        if (workflowRun.conclusion === 'failure' && skipFailedRuns) {
             console.log(`Skipping failed run ${data.owner}/${data.repo}/${data.ref}`)
             return;
         }
-
-        console.log(JSON.stringify(workflowRun, null, 2));
 
         if (workflowRun.status !== 'completed') {
             await octokit.actions.cancelWorkflowRun({
