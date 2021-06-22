@@ -102,7 +102,7 @@ async function run() {
 
     const owner = github.context.repo.owner;
     const repo = github.context.repo.repo;
-    const branch = github.context.ref.split("/").pop();
+    const branch = github.context.ref.replace("refs/heads/", "");
 
     const githubApiDomain = `https://api.github.com`;
     const authHeaders = {
