@@ -46,6 +46,13 @@ async function dispatchWorkflowEvent(octokit, data) {
 
     if (workflowRun) {
 
+        const skipFailure = core.getInput("skip_failured_runs");
+
+        if (workflowRun.conclusion === 'failure' && !skipFailure) {
+            console.log(`Skipping failed run ${data.owner}/${data.repo}/${data.ref}`)
+            return;
+        }
+
         console.log(JSON.stringify(workflowRun, null, 2));
 
         if (workflowRun.status !== 'completed') {
@@ -95,6 +102,7 @@ async function dispatchWorkflowEventToGithub(opts) {
     }
 
     const octokit = new Octokit({ auth: opts.token });
+
 
     return dispatchWorkflowEvent(octokit, data);
 }

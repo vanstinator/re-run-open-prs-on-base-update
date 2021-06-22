@@ -8,6 +8,9 @@ inputs:
   github_token:
     description: "The token to authenticate Octokit. This token will also be used to dispatch worfklow events."
     required: true
+  skip_failured_runs:
+    description: "Sometimes you may have transient failures that you want to debug and you don't want to re-run an action and lose that log context."
+    required: false
 runs:
   using: "node12"
   main: "index.js"
