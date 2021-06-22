@@ -101,7 +101,6 @@ async function dispatchWorkflowEventToGithub(opts) {
 
     const octokit = new Octokit({ auth: opts.token });
 
-
     return dispatchWorkflowEvent(octokit, data);
 }
 
