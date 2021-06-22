@@ -46,7 +46,7 @@ async function dispatchWorkflowEvent(octokit, data) {
 
     if (workflowRun) {
 
-        const skipFailure = core.getInput("skip_failured_runs");
+        const skipFailure = core.getInput("skip_failed_runs");
 
         if (workflowRun.conclusion === 'failure' && !skipFailure) {
             console.log(`Skipping failed run ${data.owner}/${data.repo}/${data.ref}`)
