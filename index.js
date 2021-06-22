@@ -33,8 +33,6 @@ async function waitForCanceledRun(octokit, data) {
         await new Promise(resolve => setTimeout(resolve, 4000));
         let workflowRun = await getWorkflowRunForBranch(octokit, data);
     
-        console.log(JSON.stringify(workflowRun, null, 2));
-
         if (workflowRun && workflowRun.status === 'completed') {
             break;
         }
@@ -47,6 +45,9 @@ async function dispatchWorkflowEvent(octokit, data) {
     let workflowRun = await getWorkflowRunForBranch(octokit, data);
 
     if (workflowRun) {
+
+        console.log(JSON.stringify(workflowRun, null, 2));
+
         if (workflowRun.status !== 'completed') {
             await octokit.actions.cancelWorkflowRun({
                 owner: data.owner,
