@@ -49,7 +49,7 @@ async function dispatchWorkflowEvent(octokit, data) {
         const skipFailedRuns = core.getInput("skip_failed_runs");
 
         if (workflowRun.conclusion === 'failure' && skipFailedRuns) {
-            console.log(`Skipping failed run ${data.owner}/${data.repo}/${data.ref}`)
+            console.log(`Skipped: Failed run ${data.owner}/${data.repo}/${data.ref}`)
             return;
         }
 
@@ -126,8 +126,21 @@ async function run() {
 
     console.log(`Found ${openPrs.length} open PR(s) targeting '${branch}'`);
 
+    const labelRegexString = core.getInput("require_label_regex");
+    const labelRegex = new RegExp(labelRegexString, "i");
+
     const dispatches = openPrs.map(async pr => {
-        console.log(`Re-triggering workflows on #${pr.number}: ${pr.title}`);
+
+        if (labelRegexString) {
+            const matchingLabels = (pr.labels || []).filter(label => label && label.name.match(labelRegex).length);
+
+            if (!matchingLabels.length) {
+                console.log(`Skipped: PR does not have a required label #${pr.number}: ${pr.title}`);
+                return Promise.resolve();
+            }
+        }
+
+        console.log(`Dispatching workflow on #${pr.number}: ${pr.title}`);
 
         try {
             await dispatchWorkflowEventToGithub({
@@ -137,7 +150,7 @@ async function run() {
                 token: githubToken
             })
         } catch (e) {
-            console.warn(`Failed to trigger workflow on #${pr.number}: ${pr.title}`);
+            console.warn(`Failed to dispatch workflow on #${pr.number}: ${pr.title}`);
             console.warn(e);
         }
 

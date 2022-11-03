@@ -27,4 +27,5 @@ jobs:
         with:
           github_token: ${{ secrets.GH_TOKEN }}
           skip_failed_runs: false
+          require_label_regex: deploy:(.*)
 ```

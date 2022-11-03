@@ -11,6 +11,9 @@ inputs:
   skip_failed_runs:
     description: "Sometimes you may have transient failures that you want to debug and you don't want to re-run an action and lose that log context."
     required: false
+  require_label_regex:
+    description: "Only dispatch another workflow if the PR contains a label matching this regex"
+    required: false
 runs:
   using: "node12"
   main: "index.js"
