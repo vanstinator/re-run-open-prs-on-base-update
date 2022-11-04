@@ -132,9 +132,9 @@ async function run() {
     const dispatches = openPrs.map(async pr => {
 
         if (labelRegexString) {
-            const matchingLabels = (pr.labels || []).filter(label => label && label.name.match(labelRegex).length);
+            const matchingLabels = (pr.labels || []).filter(label => label && (label.name.match(labelRegex) || []).length);
 
-            if (!matchingLabels.length) {
+            if (!matchingLabels || !matchingLabels.length) {
                 console.log(`Skipped: PR does not have a required label #${pr.number}: ${pr.title}`);
                 return Promise.resolve();
             }
