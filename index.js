@@ -75,24 +75,22 @@ async function dispatchWorkflowEvent(octokit, data) {
         }
 
         if (workflowRun.status !== 'completed') {
-            console.info(`DRY RUN cancelWorkflowRun... #${data.number}: ${data.title}`);
-            // await octokit.actions.cancelWorkflowRun({
-            //     owner: data.owner,
-            //     repo: data.repo,
-            //     run_id: workflowRun.id
-            // });
+            await octokit.actions.cancelWorkflowRun({
+                owner: data.owner,
+                repo: data.repo,
+                run_id: workflowRun.id
+            });
 
-            // await waitForCanceledRun(octokit, data);
+            await waitForCanceledRun(octokit, data);
         }
 
         console.info(`Dispatching "workflow_dispatch"... #${data.number}: ${data.title}`);
 
-        console.info(`DRY RUN reRunWorkflow... #${data.number}: ${data.title}`);
-        // await octokit.actions.reRunWorkflow({
-        //     owner: data.owner,
-        //     repo: data.repo,
-        //     run_id: workflowRun.id
-        // });
+        await octokit.actions.reRunWorkflow({
+            owner: data.owner,
+            repo: data.repo,
+            run_id: workflowRun.id
+        });
     }
 }
 
@@ -143,9 +141,7 @@ async function run() {
 
     const owner = github.context.repo.owner;
     const repo = github.context.repo.repo;
-    // For testing only!!! REMOVE BEFORE MERGING PR
-    const branch = 'main';
-    // const branch = github.context.ref.replace("refs/heads/", "");
+    const branch = github.context.ref.replace("refs/heads/", "");
 
     const githubApiDomain = `https://api.github.com`;
     const authHeaders = {
