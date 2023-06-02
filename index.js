@@ -40,8 +40,6 @@ async function waitForCanceledRun(octokit, data) {
 }
 
 async function dispatchWorkflowEvent(octokit, data) {
-    console.info(`Dispatching "workflow_dispatch"... #${data.number}: ${data.title}`);
-
     let workflowRun = await getWorkflowRunForBranch(octokit, data);
 
     if (workflowRun) {
@@ -53,14 +51,27 @@ async function dispatchWorkflowEvent(octokit, data) {
                 const ignoreFailedJobsRegex = new RegExp(ignoreFailedJobs, "i");
 
                 const jobs = await getJobsForWorkflowRun(octokit, { ...data, run_id: workflowRun.id });
+                let hasFailedValidJobs = false;
 
                 for (const job of jobs) {
-                    console.info(`  Job: ${job.name} - ${job.status} ${job.conclusion} ${ignoreFailedJobsRegex.test(job.name)}`);
+                    if (job.status === 'completed' && job.conclusion === 'failure') {
+                        if (ignoreFailedJobsRegex.test(job.name)) {
+                            console.info(`- Job ${job.name} is "${job.conclusion}", but will be ignored based on input.`);
+                        } else {
+                            hasFailedValidJobs = true;
+                            console.info(`- Job ${job.name} is "${job.conclusion}".`);
+                        }
+                    }
                 }
-            }
 
-            console.log(`Skipped: Failed run #${data.number}: ${data.title}`)
-            return;
+                if (hasFailedValidJobs) {
+                    console.log(`Skipped: Failed run #${data.number}: ${data.title}`)
+                    return;
+                }
+            } else {
+                console.log(`Skipped: Failed run #${data.number}: ${data.title}`)
+                return;
+            }
         }
 
         if (workflowRun.status !== 'completed') {
@@ -73,6 +84,8 @@ async function dispatchWorkflowEvent(octokit, data) {
 
             // await waitForCanceledRun(octokit, data);
         }
+
+        console.info(`Dispatching "workflow_dispatch"... #${data.number}: ${data.title}`);
 
         console.info(`DRY RUN reRunWorkflow... #${data.number}: ${data.title}`);
         // await octokit.actions.reRunWorkflow({
