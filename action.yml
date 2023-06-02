@@ -1,7 +1,7 @@
 name: "Re-run open PRs when base changes"
 description: "Re-triggers Workflows on open Pull Requests by pushing an empty commit to the PR branch."
 branding:
-  icon: 'activity'  
+  icon: 'activity'
   color: 'orange'
 author: Justin Vanderhooft
 inputs:
@@ -10,6 +10,9 @@ inputs:
     required: true
   skip_failed_runs:
     description: "Sometimes you may have transient failures that you want to debug and you don't want to re-run an action and lose that log context."
+    required: false
+  ignore_failed_jobs_regex:
+    description: "Some job names can be ignored when checking for failures."
     required: false
   require_label_regex:
     description: "Only dispatch another workflow if the PR contains a label matching this regex"

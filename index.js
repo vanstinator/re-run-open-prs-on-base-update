@@ -28,11 +28,11 @@ async function waitForCanceledRun(octokit, data) {
 
         count++;
 
-        console.info(`Waiting for workflow to cancel (attempt #${count})... ${data.owner}/${data.repo}/${data.ref}`);
+        console.info(`Waiting for workflow to cancel (attempt #${count})... #${data.number}: ${data.title}`);
 
         await new Promise(resolve => setTimeout(resolve, 4000));
         let workflowRun = await getWorkflowRunForBranch(octokit, data);
-    
+
         if (workflowRun && workflowRun.status === 'completed') {
             break;
         }
@@ -40,17 +40,38 @@ async function waitForCanceledRun(octokit, data) {
 }
 
 async function dispatchWorkflowEvent(octokit, data) {
-    console.info(`Dispatching "workflow_dispatch"... ${data.owner}/${data.repo}/${data.ref}`);
-
     let workflowRun = await getWorkflowRunForBranch(octokit, data);
 
     if (workflowRun) {
-
         const skipFailedRuns = core.getInput("skip_failed_runs");
+        const ignoreFailedJobs = core.getInput("ignore_failed_jobs_regex");
 
         if (workflowRun.conclusion === 'failure' && skipFailedRuns) {
-            console.log(`Skipped: Failed run ${data.owner}/${data.repo}/${data.ref}`)
-            return;
+            if (ignoreFailedJobs) {
+                const ignoreFailedJobsRegex = new RegExp(ignoreFailedJobs, "i");
+
+                const jobs = await getJobsForWorkflowRun(octokit, { ...data, run_id: workflowRun.id });
+                let hasFailedValidJobs = false;
+
+                for (const job of jobs) {
+                    if (job.status === 'completed' && job.conclusion === 'failure') {
+                        if (ignoreFailedJobsRegex.test(job.name)) {
+                            console.info(`- Job "${job.name}" is "${job.conclusion}", but will be ignored based on input.`);
+                        } else {
+                            hasFailedValidJobs = true;
+                            console.info(`- Job "${job.name}" is "${job.conclusion}".`);
+                        }
+                    }
+                }
+
+                if (hasFailedValidJobs) {
+                    console.log(`Skipped: Failed run #${data.number}: ${data.title}`)
+                    return;
+                }
+            } else {
+                console.log(`Skipped: Failed run #${data.number}: ${data.title}`)
+                return;
+            }
         }
 
         if (workflowRun.status !== 'completed') {
@@ -63,7 +84,9 @@ async function dispatchWorkflowEvent(octokit, data) {
             await waitForCanceledRun(octokit, data);
         }
 
-        return octokit.actions.reRunWorkflow({
+        console.info(`Dispatching "workflow_dispatch"... #${data.number}: ${data.title}`);
+
+        await octokit.actions.reRunWorkflow({
             owner: data.owner,
             repo: data.repo,
             run_id: workflowRun.id
@@ -86,22 +109,30 @@ async function getWorkflowRunForBranch(octokit, data) {
     }
 }
 
-async function dispatchWorkflowEventToGithub(opts) {
+async function getJobsForWorkflowRun(octokit, data) {
+    const response = await octokit.actions.listJobsForWorkflowRun({
+        owner: data.owner,
+        repo: data.repo,
+        run_id: data.run_id
+    });
 
-    if (!opts || !opts.owner || !opts.repo || !opts.ref || !opts.token) {
+    try {
+        return response.data.jobs;
+    } catch (e) {
+        console.error(e)
+    }
+}
+
+async function dispatchWorkflowEventToGithub(octokit, opts) {
+
+    if (!opts || !opts.owner || !opts.repo || !opts.ref) {
         return Promise.reject(new Error('Invalid parameters'))
     }
 
-    const data = {
-        owner: opts.owner,
-        repo: opts.repo,
+    return dispatchWorkflowEvent(octokit, {
+        ...opts,
         ref: opts.ref || 'heads/main',
-        message: opts.message
-    }
-
-    const octokit = new Octokit({ auth: opts.token });
-
-    return dispatchWorkflowEvent(octokit, data);
+    });
 }
 
 async function run() {
@@ -119,6 +150,7 @@ async function run() {
             Accept: "application/vnd.github.v3+json"
         }
     };
+    const octokit = new Octokit({ auth: githubToken });
 
     const openPrs = await fetch(`${githubApiDomain}/repos/${owner}/${repo}/pulls?state=open&base=${branch}`, authHeaders)
         .then(c => c.json())
@@ -129,36 +161,33 @@ async function run() {
     const labelRegexString = core.getInput("require_label_regex");
     const labelRegex = new RegExp(labelRegexString, "i");
 
-    const dispatches = openPrs.map(async pr => {
-
+    for (const pr of openPrs) {
         if (labelRegexString) {
             const matchingLabels = (pr.labels || []).filter(label => label && (label.name.match(labelRegex) || []).length);
 
             if (!matchingLabels || !matchingLabels.length) {
                 console.log(`Skipped: PR does not have a required label #${pr.number}: ${pr.title}`);
-                return Promise.resolve();
+                continue;
             }
         }
 
         console.log(`Dispatching workflow on #${pr.number}: ${pr.title}`);
 
         try {
-            await dispatchWorkflowEventToGithub({
+            await dispatchWorkflowEventToGithub(octokit, {
+                number: pr.number,
                 owner: pr.head.user.login,
-                repo: repo,
+                repo,
                 ref: pr.head.ref,
-                token: githubToken
+                title: pr.title
             })
         } catch (e) {
             console.warn(`Failed to dispatch workflow on #${pr.number}: ${pr.title}`);
             console.warn(e);
         }
 
-
         console.log(`Dispatched workflow on #${pr.number}: ${pr.title}`);
-    });
-
-    return Promise.all(dispatches);
+    }
 }
 
 run()
