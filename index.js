@@ -158,7 +158,7 @@ async function run() {
 
             if (!matchingLabels || !matchingLabels.length) {
                 console.log(`Skipped: PR does not have a required label #${pr.number}: ${pr.title}`);
-                return Promise.resolve();
+                continue;
             }
         }
 
