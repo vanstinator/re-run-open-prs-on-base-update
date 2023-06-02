@@ -56,10 +56,10 @@ async function dispatchWorkflowEvent(octokit, data) {
                 for (const job of jobs) {
                     if (job.status === 'completed' && job.conclusion === 'failure') {
                         if (ignoreFailedJobsRegex.test(job.name)) {
-                            console.info(`- Job ${job.name} is "${job.conclusion}", but will be ignored based on input.`);
+                            console.info(`- Job "${job.name}" is "${job.conclusion}", but will be ignored based on input.`);
                         } else {
                             hasFailedValidJobs = true;
-                            console.info(`- Job ${job.name} is "${job.conclusion}".`);
+                            console.info(`- Job "${job.name}" is "${job.conclusion}".`);
                         }
                     }
                 }
